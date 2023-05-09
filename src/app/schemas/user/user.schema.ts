@@ -1,8 +1,8 @@
 import { Schema, model } from 'mongoose';
-import { IUser } from './user.interface';
+import { IUser, UserModel } from './user.interface';
 import { UserType } from './user.type';
 
-const UserSchema = new Schema<IUser>({
+const UserSchema = new Schema<IUser, UserModel>({
   userId: {
     type: String,
     required: true,
@@ -21,5 +21,12 @@ const UserSchema = new Schema<IUser>({
     required: true,
   },
 });
+
+UserSchema.methods.toJSON = function () {
+  const user = this.toObject();
+  delete user.password;
+  delete user.userType;
+  return user;
+};
 
 export const User = model<IUser>('User', UserSchema);

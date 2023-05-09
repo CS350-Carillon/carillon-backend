@@ -1,3 +1,4 @@
+import { Model } from 'mongoose';
 import { UserType } from './user.type';
 
 export interface IUser {
@@ -5,4 +6,8 @@ export interface IUser {
   password: string;
   userType: UserType;
   userName: string;
+}
+
+export interface UserModel extends Model<IUser> {
+  toJSON(): { [key: string]: string };
 }
