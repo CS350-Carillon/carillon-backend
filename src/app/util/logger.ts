@@ -12,7 +12,7 @@ const logFormat = printf(({ level, message, label, timestamp }) => {
 const logger = winston.createLogger({
   format: combine(
     timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-    label({ label: 'APP' }),
+    label({ label: 'Carillon' }),
     logFormat,
   ),
   transports: [
