@@ -3,6 +3,7 @@ import cors from 'cors';
 import express, { Express, NextFunction, Request, Response } from 'express';
 import { applicationRouter } from './routes';
 import logger from './util/logger';
+import mongoose from 'mongoose';
 
 export class Application {
   private _server: Express;
@@ -16,11 +17,23 @@ export class Application {
     this._server.use(cors());
     this._server.use(this.logRequest);
     this._server.use(applicationRouter);
+    this.connectDatabase();
   }
 
   private logRequest(req: Request, res: Response, next: NextFunction) {
     logger.info(`Request URL: ${req.originalUrl} Method: ${req.method}`);
     next();
+  }
+
+  private connectDatabase() {
+    const db = mongoose.connection;
+    db.on('error', logger.error);
+    db.once('open', function () {
+      logger.info('Connected to mongod server');
+    });
+
+    mongoose.set('strictQuery', true);
+    mongoose.connect(process.env.DB_HOST as string);
   }
 
   public startServer(): void {
