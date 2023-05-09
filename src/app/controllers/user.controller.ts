@@ -39,3 +39,19 @@ export async function login(req: Request, res: Response, next: NextFunction) {
     next(error);
   }
 }
+
+export async function checkInformation(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const user = await User.findById(req.params.id);
+    if (!user) {
+      return res.status(401).send('Invalid user id');
+    }
+    res.json(user.toJSON());
+  } catch (error) {
+    next(error);
+  }
+}
