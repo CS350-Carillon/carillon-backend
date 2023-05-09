@@ -55,3 +55,23 @@ export async function checkInformation(
     next(error);
   }
 }
+
+export async function editInformation(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const user = await User.findByIdAndUpdate(req.params.id, {
+      userId: req.body.userId,
+      password: req.body.password,
+      userName: req.body.userName,
+    });
+    if (!user) {
+      return res.status(401).send('Invalid user id');
+    }
+    res.json(user.toJSON());
+  } catch (error) {
+    next(error);
+  }
+}
