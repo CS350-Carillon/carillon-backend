@@ -6,6 +6,11 @@ const ChatSchema = new Schema<IChat>({
     type: String,
     required: true,
   },
+  reactions: {
+    type: Types.ObjectId,
+    ref: 'Reaction',
+    required: true,
+  },
   sender: {
     type: Types.ObjectId,
     ref: 'User',
