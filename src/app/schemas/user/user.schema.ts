@@ -1,4 +1,4 @@
-import { Schema, model } from 'mongoose';
+import { Schema, Types, model } from 'mongoose';
 import { IUser, UserModel } from './user.interface';
 import { UserType } from './user.type';
 
@@ -20,6 +20,12 @@ const UserSchema = new Schema<IUser, UserModel>({
     type: String,
     required: true,
   },
+  owningWorkspaces: [{ type: Types.ObjectId, ref: 'Workspace' }],
+  participatingWorkspaces: [{ type: Types.ObjectId, ref: 'Workspace' }],
+  owningChannels: [{ type: Types.ObjectId, ref: 'Channel' }],
+  participatingChannels: [{ type: Types.ObjectId, ref: 'Channel' }],
+  owningDMs: [{ type: Types.ObjectId, ref: 'Directmessage' }],
+  participatingDMs: [{ type: Types.ObjectId, ref: 'Directmessage' }],
 });
 
 UserSchema.methods.toJSON = function () {
