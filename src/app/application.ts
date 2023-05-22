@@ -17,6 +17,7 @@ export class Application {
     this._server.use(cors());
     this._server.use(this.logRequest);
     this._server.use(applicationRouter);
+    this._server.use(this.errorHandler);
     this.connectDatabase();
   }
 
@@ -34,6 +35,16 @@ export class Application {
 
     mongoose.set('strictQuery', true);
     mongoose.connect(process.env.DB_HOST as string);
+  }
+
+  private errorHandler(
+    err: Error,
+    req: Request,
+    res: Response,
+    next: NextFunction,
+  ) {
+    res.status(500);
+    res.send(err.message);
   }
 
   public startServer(): void {
