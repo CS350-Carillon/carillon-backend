@@ -66,29 +66,49 @@ export async function deleteChannel(
   }
 }
 
-export async function addMembers(
+export async function updateChannels(
   req: Request,
   res: Response,
   next: NextFunction,
 ) {
   try {
     const owner = new Types.ObjectId(res.locals.user.id);
-    const members = req.body.members;
+    const addedMembers = req.body.addedMembers;
+    const kickedMembers = req.body.kickedMembers;
 
-    const channel = await Channel.findOneAndUpdate(
+    let channel = await Channel.findOneAndUpdate(
       {
         name: req.body.name,
         owner: owner,
       },
       {
+        description: req.body.description,
         $push: {
-          members: members,
+          members: addedMembers,
         },
       },
       {
         new: true,
       },
     );
+
+    channel = await Channel.findOneAndUpdate(
+      {
+        name: req.body.name,
+        owner: owner,
+      },
+      {
+        $pull: {
+          members: {
+            $in: kickedMembers,
+          },
+        },
+      },
+      {
+        new: true,
+      },
+    );
+
     res.json(channel);
   } catch (error: any) {
     logger.error(error.message);
