@@ -3,6 +3,20 @@ import { Channel } from '../schemas';
 import logger from '../util/logger';
 import { Types } from 'mongoose';
 
+export async function listChannel(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const channels = await Channel.find();
+    res.json(channels);
+  } catch (error: any) {
+    logger.error(error.message);
+    next(error);
+  }
+}
+
 export async function createChannel(
   req: Request,
   res: Response,
@@ -21,6 +35,29 @@ export async function createChannel(
       description: req.body.description,
       owner: owner,
       members: members,
+    });
+    res.json(channel);
+  } catch (error: any) {
+    logger.error(error.message);
+    next(error);
+  }
+}
+
+export async function deleteChannel(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const channel = await Channel.deleteOne({
+      $and: [
+        {
+          name: req.body.name,
+        },
+        {
+          owner: res.locals.user.id,
+        },
+      ],
     });
     res.json(channel);
   } catch (error: any) {
