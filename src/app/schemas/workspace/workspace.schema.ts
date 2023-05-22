@@ -29,4 +29,4 @@ const WorkspaceSchema = new Schema<IWorkspace>({
   ],
 });
 
-export const Workspace = model<IWorkspace>('Channel', WorkspaceSchema);
+export const Workspace = model<IWorkspace>('Workspace', WorkspaceSchema);
