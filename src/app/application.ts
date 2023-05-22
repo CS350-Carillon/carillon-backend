@@ -43,6 +43,7 @@ export class Application {
     res: Response,
     next: NextFunction,
   ) {
+    logger.error(err.message);
     res.status(500);
     res.send(err.message);
   }
