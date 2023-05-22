@@ -12,7 +12,7 @@ const logFormat = printf(({ level, message, label, timestamp }) => {
 const logger = winston.createLogger({
   format: combine(
     timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-    label({ label: 'APP' }),
+    label({ label: 'Carillon' }),
     logFormat,
   ),
   transports: [
@@ -48,6 +48,7 @@ const logger = winston.createLogger({
 if (process.env.NODE_ENV !== 'production') {
   logger.add(
     new winston.transports.Console({
+      level: 'debug',
       format: winston.format.combine(winston.format.colorize(), logFormat),
     }),
   );
