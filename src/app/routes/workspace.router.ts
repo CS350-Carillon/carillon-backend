@@ -8,6 +8,9 @@ router.get('/', WorkspaceController.listWorkspace);
 
 router.use(checkIsLoggedIn);
 
-router.post('/', WorkspaceController.createWorkspace);
+router
+  .route('/')
+  .post(WorkspaceController.createWorkspace)
+  .delete(WorkspaceController.deleteWorkspace);
 
 export const workspaceRouter = router;

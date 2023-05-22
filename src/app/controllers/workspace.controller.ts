@@ -69,3 +69,27 @@ export function generateAuthCode() {
   }
   return result;
 }
+
+export async function deleteWorkspace(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const workspace = await Workspace.findOne({
+      name: req.body.name,
+      owner: res.locals.user.id,
+    });
+
+    if (!workspace) {
+      return res.json('No workspace found');
+    }
+
+    // TODO : Cascade Deletion
+
+    const deletedWorkspace = await Workspace.findByIdAndDelete(workspace._id);
+    res.json(deletedWorkspace);
+  } catch (error) {
+    next(error);
+  }
+}
