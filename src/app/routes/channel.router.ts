@@ -13,4 +13,6 @@ router
   .post(ChannelController.createChannel)
   .delete(ChannelController.deleteChannel);
 
+router.post('/members', ChannelController.addMembers);
+
 export const channelRouter = router;

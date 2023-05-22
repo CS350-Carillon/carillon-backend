@@ -65,3 +65,33 @@ export async function deleteChannel(
     next(error);
   }
 }
+
+export async function addMembers(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const owner = new Types.ObjectId(res.locals.user.id);
+    const members = req.body.members;
+
+    const channel = await Channel.findOneAndUpdate(
+      {
+        name: req.body.name,
+        owner: owner,
+      },
+      {
+        $push: {
+          members: members,
+        },
+      },
+      {
+        new: true,
+      },
+    );
+    res.json(channel);
+  } catch (error: any) {
+    logger.error(error.message);
+    next(error);
+  }
+}
