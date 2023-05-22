@@ -19,14 +19,7 @@ const WorkspaceSchema = new Schema<IWorkspace>({
   defaultChannel: {
     type: Types.ObjectId,
     ref: 'Channel',
-    required: true,
   },
-  channels: [
-    {
-      type: Types.ObjectId,
-      ref: 'Channel',
-    },
-  ],
 });
 
 export const Workspace = model<IWorkspace>('Workspace', WorkspaceSchema);
