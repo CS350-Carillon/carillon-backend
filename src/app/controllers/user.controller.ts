@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { User } from '../schemas';
 import { compareSync, hashSync } from 'bcrypt';
+import jwt from 'jsonwebtoken';
 
 export async function signup(req: Request, res: Response, next: NextFunction) {
   try {
@@ -34,7 +35,12 @@ export async function login(req: Request, res: Response, next: NextFunction) {
     if (!compareSync(req.body.password, user.password)) {
       return res.status(401).send('Invalid password');
     }
-    res.json(user.toJSON());
+    const token = jwt.sign(
+      { _id: user._id, type: user.userType },
+      process.env.JWT_SECRET as string,
+      { expiresIn: '1d' },
+    );
+    res.json({ ...user.toJSON(), token: token });
   } catch (error) {
     next(error);
   }
