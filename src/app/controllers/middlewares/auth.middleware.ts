@@ -22,7 +22,7 @@ export function checkIsLoggedIn(
         if (err) {
           return res.status(401).send('Invalid token');
         }
-        res.locals.user = { _id: decoded._id, type: decoded.type };
+        res.locals.user = { id: decoded.id, type: decoded.type };
         next();
       },
     );
