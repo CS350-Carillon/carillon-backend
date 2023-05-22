@@ -3,8 +3,8 @@
 ## Quick Start
 
 ```sh
-git clone https://github.com/Byunk/node-express-simple-boilerplate.git
-cd node-express-simple-boilerplate
+git clone https://github.com/CS350-Carillon/carillon-backend.git
+cd carillon-backend
 npm install
 ```
 
