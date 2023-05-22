@@ -16,6 +16,11 @@ const ChannelSchema = new Schema<IChannel>({
     required: true,
   },
   members: [{ type: Types.ObjectId, ref: 'User' }],
+  workspace: {
+    type: Types.ObjectId,
+    ref: 'Workspace',
+    required: true,
+  },
 });
 
 export const Channel = model<IChannel>('Channel', ChannelSchema);
