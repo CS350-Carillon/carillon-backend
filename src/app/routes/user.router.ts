@@ -4,6 +4,7 @@ import { checkIsLoggedIn } from '../controllers/middlewares/auth.middleware';
 
 const router: Router = Router();
 
+router.get('/', UserController.list);
 router.post('/signup', UserController.signup);
 router.post('/login', UserController.login);
 

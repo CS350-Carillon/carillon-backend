@@ -1,7 +1,19 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextFunction, Request, Response } from 'express';
 import { User } from '../schemas';
 import { compareSync, hashSync } from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import logger from '../util/logger';
+
+export async function list(req: Request, res: Response, next: NextFunction) {
+  try {
+    const users = await User.find();
+    res.json(users);
+  } catch (error: any) {
+    logger.error(error.message);
+    next(error);
+  }
+}
 
 export async function signup(req: Request, res: Response, next: NextFunction) {
   try {
