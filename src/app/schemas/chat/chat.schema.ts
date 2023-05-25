@@ -10,6 +10,12 @@ const ChatSchema = new Schema<IChat>({
     type: Types.ObjectId,
     ref: 'Channel',
   },
+  responses: [
+    {
+      type: Types.ObjectId,
+      ref: 'Chat',
+    },
+  ],
   reactions: [
     {
       type: Types.ObjectId,
@@ -17,11 +23,6 @@ const ChatSchema = new Schema<IChat>({
     },
   ],
   sender: {
-    type: Types.ObjectId,
-    ref: 'User',
-    required: true,
-  },
-  receiver: {
     type: Types.ObjectId,
     ref: 'User',
     required: true,
