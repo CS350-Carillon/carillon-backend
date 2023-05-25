@@ -82,13 +82,46 @@ export async function deleteWorkspace(
     });
 
     if (!workspace) {
-      return res.json('No workspace found');
+      return res.sendStatus(404);
     }
 
     // TODO : Cascade Deletion
 
     const deletedWorkspace = await Workspace.findByIdAndDelete(workspace._id);
     res.json(deletedWorkspace);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function checkInvitationCode(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const workspace = await Workspace.findOne({
+      name: req.body.name,
+    });
+    if (!workspace) {
+      return res.sendStatus(404);
+    }
+
+    if (workspace.invitationCode != req.body.invitationCode) {
+      return res.sendStatus(400);
+    }
+
+    const newWorkspace = await workspace.updateOne(
+      {
+        $push: {
+          members: res.locals.user.id,
+        },
+      },
+      {
+        new: true,
+      },
+    );
+    res.json(newWorkspace);
   } catch (error) {
     next(error);
   }
