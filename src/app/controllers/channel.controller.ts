@@ -34,7 +34,7 @@ export async function createChannel(
     const channel = await Channel.create({
       name: req.body.name,
       description: req.body.description,
-      owner: owner,
+      owner: members,
       members: members,
     });
     res.json(channel);
@@ -76,6 +76,7 @@ export async function updateChannels(
     const owner = new Types.ObjectId(res.locals.user.id);
     const addedMembers = req.body.addedMembers;
     const kickedMembers = req.body.kickedMembers;
+    const addedOwner = req.body.addedOwner;
 
     let channel = await Channel.findOneAndUpdate(
       {
@@ -86,6 +87,7 @@ export async function updateChannels(
         description: req.body.description,
         $push: {
           members: addedMembers,
+          owner: addedOwner,
         },
       },
       {

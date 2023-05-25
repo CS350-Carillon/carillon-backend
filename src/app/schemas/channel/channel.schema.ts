@@ -10,11 +10,12 @@ const ChannelSchema = new Schema<IChannel>({
     type: String,
     default: '',
   },
-  owner: {
-    type: Types.ObjectId,
-    ref: 'User',
-    required: true,
-  },
+  owner: [
+    {
+      type: Types.ObjectId,
+      ref: 'User',
+    },
+  ],
   members: [{ type: Types.ObjectId, ref: 'User' }],
 });
 
