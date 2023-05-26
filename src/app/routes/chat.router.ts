@@ -4,7 +4,7 @@ import { checkIsLoggedIn } from '../controllers/middlewares/auth.middleware';
 
 const router: Router = Router();
 
-router.get('/', ChatController.listChats);
+router.get('/', ChatController.listMessages);
 
 router.use(checkIsLoggedIn);
 

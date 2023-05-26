@@ -3,7 +3,7 @@ import { NextFunction, Request, Response } from 'express';
 import logger from '../util/logger';
 import { Chat } from '../schemas';
 
-export async function listChats(
+export async function listMessages(
   req: Request,
   res: Response,
   next: NextFunction,
