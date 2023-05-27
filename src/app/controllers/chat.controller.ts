@@ -23,7 +23,6 @@ export async function postMessage(
   next: NextFunction,
 ) {
   try {
-    //TODO: sender가 해당 채널에 있는지 체크
     const message = await Chat.create({
       content: req.body.content,
       channel: req.body.channel,
@@ -42,7 +41,6 @@ export async function addResponse(
   next: NextFunction,
 ) {
   try {
-    //TODO: sender가 해당 채널에 있는지 체크
     const message = await Chat.create({
       content: req.body.content,
       channel: req.body.channel,
