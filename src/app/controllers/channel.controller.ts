@@ -31,31 +31,13 @@ export async function createChannel(
       members.push(...req.body.members);
     }
 
-    const workspace = await Workspace.findOne({
-      name: req.body.workspace,
-    });
-    if (!workspace) {
-      return res.status(404);
-    }
-
-    const channel = await Channel.findOneAndUpdate(
-      {
-        name: req.body.name,
-        workspace: workspace,
-      },
-      {
-        name: req.body.name,
-        description: req.body.description,
-        owner: owner,
-        members: members,
-        workspace: workspace,
-      },
-      {
-        upsert: true,
-        new: true,
-      },
-    );
-
+    //TODO: 중복체크
+    const channel = await Channel.create({
+      name: req.body.name,
+      description: req.body.description,
+      owner: members,
+      members: members,
+    )};
     res.json(channel);
   } catch (error: any) {
     logger.error(error.message);
@@ -88,6 +70,8 @@ export async function deleteChannel(
   }
 }
 
+//TODO: 기능 분리
+//TODO: add member & kick member 소켓과 연결
 export async function updateChannels(
   req: Request,
   res: Response,
@@ -97,6 +81,7 @@ export async function updateChannels(
     const owner = new Types.ObjectId(res.locals.user.id);
     const addedMembers = req.body.addedMembers;
     const kickedMembers = req.body.kickedMembers;
+    const addedOwner = req.body.addedOwner;
 
     const workspace = await Workspace.findOne({
       name: req.body.workspace,
@@ -115,6 +100,7 @@ export async function updateChannels(
         description: req.body.description,
         $push: {
           members: addedMembers,
+          owner: addedOwner,
         },
       },
       {

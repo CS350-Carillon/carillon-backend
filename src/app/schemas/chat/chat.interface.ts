@@ -1,10 +1,12 @@
 import { PopulatedDoc } from 'mongoose';
 import { IUser } from '../user';
 import { IReaction } from '../reaction';
+import { IChannel } from '../channel';
 
 export interface IChat {
   content: string;
-  reactions: PopulatedDoc<IReaction>;
+  channel: PopulatedDoc<IChannel>;
+  responses: PopulatedDoc<IChat>;
+  reactions: PopulatedDoc<IReaction>[];
   sender: PopulatedDoc<IUser>;
-  receiver: PopulatedDoc<IUser>;
 }
