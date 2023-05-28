@@ -16,28 +16,3 @@ export async function listMessages(
     next(error);
   }
 }
-
-export async function addResponse(
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) {
-  try {
-    const message = await Chat.create({
-      content: req.body.content,
-      channel: req.body.channel,
-      sender: res.locals.user.id,
-    });
-
-    await Chat.findByIdAndUpdate(req.params.id, {
-      $push: {
-        responses: message,
-      },
-    });
-
-    res.json(message);
-  } catch (error: any) {
-    logger.error(error.message);
-    next(error);
-  }
-}

@@ -66,5 +66,35 @@ export function startServer(io: Server) {
         logger.error(error.message);
       }
     });
+
+    socket.on('addResponse', async (response) => {
+      try {
+        const sender = await User.findById(response.sender);
+        if (!sender) {
+          new Error(`${response.sender} not found`);
+        }
+
+        const chat = await Chat.create({
+          content: response.content,
+          channel: response.channel,
+          sender: response.sender,
+        });
+
+        //TODO: Validation
+        await Chat.findByIdAndUpdate(response.chatId, {
+          $push: {
+            responses: chat,
+          },
+        });
+
+        socket.to(response.channel.toString()).emit('addResponse', {
+          chatId: response.chatId, // This is the id of the chat that the response is for.
+          sender: sender?.userName,
+          content: response.content,
+        });
+      } catch (error: any) {
+        logger.error(error.message);
+      }
+    });
   });
 }
