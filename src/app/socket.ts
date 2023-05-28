@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Server } from 'socket.io';
 import logger from './util/logger';
-import { Chat, User } from './schemas';
+import { Chat, Reaction, User } from './schemas';
 
 export function startServer(io: Server) {
   io.on('connection', (socket) => {
@@ -91,6 +91,40 @@ export function startServer(io: Server) {
           chatId: response.chatId, // This is the id of the chat that the response is for.
           sender: sender?.userName,
           content: response.content,
+        });
+      } catch (error: any) {
+        logger.error(error.message);
+      }
+    });
+
+    socket.on('addReaction', async (reaction) => {
+      try {
+        const reactor = await User.findById(reaction.reactor);
+        if (!reactor) {
+          new Error(`${reaction.reactor} not found`);
+        }
+
+        const createdReaction = await Reaction.create({
+          reactionType: reaction.reactionType,
+          reactor: reaction.reactor,
+        });
+
+        //TODO: Validation
+        const chat = await Chat.findById(reaction.chatId);
+        if (!chat || !chat.channel) {
+          return new Error(`Channel not found`);
+        }
+
+        await Chat.findByIdAndUpdate(reaction.chatId, {
+          $push: {
+            reactions: createdReaction,
+          },
+        });
+
+        socket.to(chat.channel.toString()).emit('addReaction', {
+          chatId: reaction.chatId, // This is the id of the chat that the response is for.
+          sender: reactor?.userName,
+          reactionType: reaction.reactionType,
         });
       } catch (error: any) {
         logger.error(error.message);

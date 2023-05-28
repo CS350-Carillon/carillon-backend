@@ -8,11 +8,6 @@ const ReactionSchema = new Schema<IReaction>({
     enum: Object.values(ReactionType),
     required: true,
   },
-  reactingChat: {
-    type: Types.ObjectId,
-    ref: 'Chat',
-    required: true,
-  },
   reactor: {
     type: Types.ObjectId,
     ref: 'User',
