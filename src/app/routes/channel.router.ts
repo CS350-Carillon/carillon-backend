@@ -13,6 +13,12 @@ router
   .post(ChannelController.createChannel)
   .delete(ChannelController.deleteChannel);
 
-router.put('/members', ChannelController.updateChannels);
+router.put('/:channelId/members/add', ChannelController.addMembers);
+router.put('/:channelId/members/kick', ChannelController.kickMembers);
+router.put(
+  '/:channelId/description',
+  ChannelController.changeChannelDescription,
+);
+router.put('/:channelId/owner', ChannelController.changeChannelAuthority);
 
 export const channelRouter = router;

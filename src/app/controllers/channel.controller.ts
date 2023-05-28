@@ -76,63 +76,97 @@ export async function deleteChannel(
   }
 }
 
-//TODO: 기능 분리
 //TODO: add member & kick member 소켓과 연결
-export async function updateChannels(
+export async function addMembers(
   req: Request,
   res: Response,
   next: NextFunction,
 ) {
   try {
-    const owner = new Types.ObjectId(res.locals.user.id);
-    const addedMembers = req.body.addedMembers;
-    const kickedMembers = req.body.kickedMembers;
-    const addedOwner = req.body.addedOwner;
-
-    const workspace = await Workspace.findOne({
-      name: req.body.workspace,
-    });
-    if (!workspace) {
-      return res.status(404);
+    const owner = res.locals.user.id;
+    const channel = await Channel.findById(req.params.channelId);
+    if (!channel!.owner.includes(owner)) {
+      next(new Error('owner is not authorized'));
     }
 
-    let channel = await Channel.findOneAndUpdate(
-      {
-        name: req.body.name,
-        owner: owner,
-        workspace: workspace,
+    const newChannel = await Channel.findByIdAndUpdate(req.params.channelId, {
+      $push: {
+        members: req.body.members,
       },
-      {
-        description: req.body.description,
-        $push: {
-          members: addedMembers,
-          owner: addedOwner,
-        },
-      },
-      {
-        new: true,
-      },
-    );
+    });
+    res.json(newChannel);
+  } catch (error: any) {
+    logger.error(error.message);
+    next(error);
+  }
+}
 
-    channel = await Channel.findOneAndUpdate(
-      {
-        name: req.body.name,
-        owner: owner,
-        workspace: workspace,
-      },
-      {
-        $pull: {
-          members: {
-            $in: kickedMembers,
-          },
-        },
-      },
-      {
-        new: true,
-      },
-    );
+export async function kickMembers(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const owner = res.locals.user.id;
+    const channel = await Channel.findById(req.params.channelId);
+    if (!channel!.owner.includes(owner)) {
+      next(new Error('owner is not authorized'));
+    }
 
-    res.json(channel);
+    const newChannel = await Channel.findByIdAndUpdate(req.params.channelId, {
+      $pull: {
+        members: req.body.members,
+      },
+    });
+    res.json(newChannel);
+  } catch (error: any) {
+    logger.error(error.message);
+    next(error);
+  }
+}
+
+//TODO: Change Default Channel
+
+export async function changeChannelDescription(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const owner = res.locals.user.id;
+    const channel = await Channel.findById(req.params.channelId);
+    if (!channel!.owner.includes(owner)) {
+      next(new Error('owner is not authorized'));
+    }
+
+    const newChannel = await Channel.findByIdAndUpdate(req.params.channelId, {
+      description: req.body.description,
+    });
+    res.json(newChannel);
+  } catch (error: any) {
+    logger.error(error.message);
+    next(error);
+  }
+}
+
+export async function changeChannelAuthority(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const owner = res.locals.user.id;
+    const channel = await Channel.findById(req.params.channelId);
+    if (!channel!.owner.includes(owner)) {
+      next(new Error('owner is not authorized'));
+    }
+
+    const newChannel = await Channel.findByIdAndUpdate(req.params.channelId, {
+      $push: {
+        owner: req.body.user,
+      },
+    });
+    res.json(newChannel);
   } catch (error: any) {
     logger.error(error.message);
     next(error);
