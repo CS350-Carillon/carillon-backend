@@ -13,4 +13,5 @@ router
   .post(WorkspaceController.createWorkspace)
   .delete(WorkspaceController.deleteWorkspace);
 
+router.post('/members', WorkspaceController.checkInvitationCode);
 export const workspaceRouter = router;

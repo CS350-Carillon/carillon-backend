@@ -31,6 +31,7 @@ export async function createChannel(
       members.push(...req.body.members);
     }
 
+    //TODO: 중복체크
     const channel = await Channel.create({
       name: req.body.name,
       description: req.body.description,
@@ -67,6 +68,8 @@ export async function deleteChannel(
   }
 }
 
+//TODO: 기능 분리
+//TODO: add member & kick member 소켓과 연결
 export async function updateChannels(
   req: Request,
   res: Response,
