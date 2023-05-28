@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextFunction, Request, Response } from 'express';
-import { Channel } from '../schemas';
+import { Channel, Workspace } from '../schemas';
 import logger from '../util/logger';
 import { Types } from 'mongoose';
 
@@ -10,7 +10,7 @@ export async function listChannel(
   next: NextFunction,
 ) {
   try {
-    const channels = await Channel.find();
+    const channels = await Channel.find().populate('workspace');
     res.json(channels);
   } catch (error: any) {
     logger.error(error.message);
@@ -37,7 +37,7 @@ export async function createChannel(
       description: req.body.description,
       owner: members,
       members: members,
-    });
+    )};
     res.json(channel);
   } catch (error: any) {
     logger.error(error.message);
@@ -51,15 +51,17 @@ export async function deleteChannel(
   next: NextFunction,
 ) {
   try {
+    const workspace = await Workspace.findOne({
+      name: req.body.workspace,
+    });
+    if (!workspace) {
+      return res.status(404);
+    }
+
     const channel = await Channel.deleteOne({
-      $and: [
-        {
-          name: req.body.name,
-        },
-        {
-          owner: res.locals.user.id,
-        },
-      ],
+      name: req.body.name,
+      owner: res.locals.user.id,
+      workspace: workspace,
     });
     res.json(channel);
   } catch (error: any) {
@@ -81,10 +83,18 @@ export async function updateChannels(
     const kickedMembers = req.body.kickedMembers;
     const addedOwner = req.body.addedOwner;
 
+    const workspace = await Workspace.findOne({
+      name: req.body.workspace,
+    });
+    if (!workspace) {
+      return res.status(404);
+    }
+
     let channel = await Channel.findOneAndUpdate(
       {
         name: req.body.name,
         owner: owner,
+        workspace: workspace,
       },
       {
         description: req.body.description,
@@ -102,6 +112,7 @@ export async function updateChannels(
       {
         name: req.body.name,
         owner: owner,
+        workspace: workspace,
       },
       {
         $pull: {

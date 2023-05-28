@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import { Workspace } from '../schemas/workspace';
 import { Types } from 'mongoose';
 import { Channel } from '../schemas';
+import logger from '../util/logger';
 
 export async function listWorkspace(
   req: Request,
@@ -25,14 +26,6 @@ export async function createWorkspace(
     const owner = new Types.ObjectId(res.locals.user.id);
     const members = [owner];
 
-    const defaultChannel = await Channel.create({
-      name: 'Default Channel',
-      description: 'Default Channel',
-      owner: owner,
-      members: members,
-    });
-    const channels = [defaultChannel];
-
     const workspace = await Workspace.findOneAndUpdate(
       {
         name: req.body.name,
@@ -43,15 +36,45 @@ export async function createWorkspace(
         owner: res.locals.user.id,
         members: members,
         invitationCode: generateAuthCode(),
-        defaultChannel: defaultChannel._id,
-        channels: channels,
       },
       {
         upsert: true,
         new: true,
       },
     );
-    res.json(workspace);
+
+    const defaultChannel = await Channel.findOneAndUpdate(
+      {
+        name: 'Default Channel',
+        workspace: workspace,
+      },
+      {
+        name: 'Default Channel',
+        description: 'Default Channel',
+        owner: owner,
+        members: members,
+        workspace: workspace,
+      },
+      {
+        upsert: true,
+        new: true,
+      },
+    );
+
+    const updatedWorkspace = await Workspace.findOneAndUpdate(
+      {
+        name: req.body.name,
+        owner: res.locals.user.id,
+      },
+      {
+        defaultChannel: defaultChannel,
+      },
+      {
+        new: true,
+      },
+    );
+
+    res.json(updatedWorkspace);
   } catch (error) {
     next(error);
   }
@@ -85,7 +108,11 @@ export async function deleteWorkspace(
       return res.sendStatus(404);
     }
 
-    // TODO : Cascade Deletion
+    // Cascade Deletion
+    const deletedChannels = await Channel.deleteMany({
+      workspace: workspace,
+    });
+    logger.debug(deletedChannels);
 
     const deletedWorkspace = await Workspace.findByIdAndDelete(workspace._id);
     res.json(deletedWorkspace);

@@ -8,5 +8,4 @@ export interface IWorkspace {
   invitationCode: string;
   members: PopulatedDoc<IUser>[];
   defaultChannel: PopulatedDoc<IChannel>;
-  channels: PopulatedDoc<IChannel>[];
 }
