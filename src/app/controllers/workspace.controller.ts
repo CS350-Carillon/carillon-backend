@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 import { Workspace } from '../schemas/workspace';
 import { Types } from 'mongoose';
-import { Channel } from '../schemas';
+import { Channel, User } from '../schemas';
 import logger from '../util/logger';
 
 export async function listWorkspace(
@@ -73,6 +73,13 @@ export async function createWorkspace(
         new: true,
       },
     );
+
+    await User.findByIdAndUpdate(owner, {
+      $push: {
+        owningWorkspaces: workspace._id,
+        participatingWorkspaces: workspace._id,
+      },
+    });
 
     res.json(updatedWorkspace);
   } catch (error) {
@@ -148,6 +155,12 @@ export async function checkInvitationCode(
         new: true,
       },
     );
+
+    await User.findByIdAndUpdate(res.locals.user.id, {
+      $push: {
+        participatingWorkspaces: workspace._id,
+      },
+    });
     res.json(newWorkspace);
   } catch (error) {
     next(error);
