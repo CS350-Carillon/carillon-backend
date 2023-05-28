@@ -1,12 +1,17 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import express, { Express, NextFunction, Request, Response } from 'express';
 import { applicationRouter } from './routes';
 import logger from './util/logger';
 import mongoose from 'mongoose';
+import { createServer } from "http";
+import { Server } from 'socket.io';
+import { startServer } from './socket';
 
 export class Application {
   private _server: Express;
+  private _httpServer;
 
   constructor() {
     this._server = express();
@@ -19,6 +24,9 @@ export class Application {
     this._server.use(applicationRouter);
     this._server.use(this.errorHandler);
     this.connectDatabase();
+
+    this._httpServer = createServer(this._server)
+    this.connectWebSocket();
   }
 
   private logRequest(req: Request, res: Response, next: NextFunction) {
@@ -37,6 +45,12 @@ export class Application {
     mongoose.connect(process.env.DB_HOST as string);
   }
 
+  private connectWebSocket() {
+    const io = new Server(this._httpServer, { /* options */ });
+    startServer(io);
+    logger.info('Listening to socket connection')
+  }
+
   private errorHandler(
     err: Error,
     req: Request,
@@ -51,7 +65,7 @@ export class Application {
   public startServer(): void {
     const host: string = this._server.get('host');
     const port: number = this._server.get('port');
-    this._server.listen(port, () => {
+    this._httpServer.listen(port, () => {
       logger.info(`Server started at http://${host}:${port}`);
     });
   }
