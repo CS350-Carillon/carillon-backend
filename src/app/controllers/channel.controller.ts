@@ -37,7 +37,7 @@ export async function createChannel(
       description: req.body.description,
       owner: members,
       members: members,
-    )};
+    });
     res.json(channel);
   } catch (error: any) {
     logger.error(error.message);
