@@ -56,11 +56,24 @@ export function startServer(io: Server) {
       try {
         await Chat.findByIdAndUpdate(message.id, {
           content: message.content,
-          channel: message.channel,
         });
         socket.to(message.channel.toString()).emit('editMessage', {
           messageId: message.id,
           content: message.content,
+        });
+      } catch (error: any) {
+        logger.error(error.message);
+      }
+    });
+
+    socket.on('deleteMessage', async (message) => {
+      try {
+        await Chat.findByIdAndUpdate(message.id, {
+          content: 'This message is removed from the channel',
+        });
+        socket.to(message.channel.toString()).emit('deleteMessage', {
+          messageId: message.id,
+          content: 'This message is removed from the channel',
         });
       } catch (error: any) {
         logger.error(error.message);
