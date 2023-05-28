@@ -68,6 +68,8 @@ export async function deleteChannel(
   }
 }
 
+//TODO: 기능 분리
+//TODO: add member & kick member 소켓과 연결
 export async function updateChannels(
   req: Request,
   res: Response,
