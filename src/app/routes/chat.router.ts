@@ -8,8 +8,6 @@ router.get('/', ChatController.listMessages);
 
 router.use(checkIsLoggedIn);
 
-router.route('/').post(ChatController.postMessage);
-
 router.route('/:id').post(ChatController.addResponse);
 
 export const chatRouter = router;
