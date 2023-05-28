@@ -31,7 +31,6 @@ export async function createChannel(
       members.push(...req.body.members);
     }
 
-    //TODO: 중복체크
     const channel = await Channel.create({
       name: req.body.name,
       description: req.body.description,

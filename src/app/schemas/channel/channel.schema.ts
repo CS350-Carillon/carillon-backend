@@ -24,4 +24,15 @@ const ChannelSchema = new Schema<IChannel>({
   },
 });
 
+ChannelSchema.pre('save', async function (next) {
+  const channel = await Channel.findOne({
+    name: this.name,
+  });
+  if (!channel) {
+    return next(new Error('Channel already exists'));
+  }
+
+  next();
+});
+
 export const Channel = model<IChannel>('Channel', ChannelSchema);
