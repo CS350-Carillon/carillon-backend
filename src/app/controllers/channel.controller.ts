@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextFunction, Request, Response } from 'express';
-import { Channel, Workspace } from '../schemas';
+import { Channel, User, Workspace } from '../schemas';
 import logger from '../util/logger';
 import { Types } from 'mongoose';
 
@@ -36,6 +36,13 @@ export async function createChannel(
       description: req.body.description,
       owner: members,
       members: members,
+    });
+
+    await User.findByIdAndUpdate(owner, {
+      $push: {
+        owningChannels: channel._id,
+        participatingChannels: channel._id,
+      },
     });
     res.json(channel);
   } catch (error: any) {

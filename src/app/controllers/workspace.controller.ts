@@ -115,12 +115,6 @@ export async function deleteWorkspace(
       return res.sendStatus(404);
     }
 
-    // Cascade Deletion
-    const deletedChannels = await Channel.deleteMany({
-      workspace: workspace,
-    });
-    logger.debug(deletedChannels);
-
     const deletedWorkspace = await Workspace.findByIdAndDelete(workspace._id);
     res.json(deletedWorkspace);
   } catch (error) {
