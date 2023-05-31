@@ -7,6 +7,8 @@ const router: Router = Router();
 router.get('/', UserController.list);
 router.post('/signup', UserController.signup);
 router.post('/login', UserController.login);
+router.post('/email', UserController.sendEmailVerification);
+router.post('/verify', UserController.verifyEmail);
 
 router.use(checkIsLoggedIn);
 

@@ -10,7 +10,10 @@ export async function sendEmail(email: string, authCode: string) {
     },
   });
   const mailOptions = {
-    from: process.env.GMAIL_ID,
+    from: {
+      name: 'Carillon-authenticator',
+      address: 'carillon-authenticator@gmail.com',
+    },
     to: email,
     subject: '이메일 인증',
     html: `<h1>이메일 인증</h1>
