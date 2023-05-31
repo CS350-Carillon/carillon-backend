@@ -28,9 +28,12 @@ export function startServer(io: Server) {
       }
     });
 
-    socket.on('join', (roomId) => {
+    socket.on('join', ({ roomId, userId }) => {
       logger.debug(`${socket.id} joined ${roomId}`);
       socket.join(roomId);
+      socket.to(roomId).emit('join', {
+        userId: userId,
+      });
     });
 
     socket.on('postMessage', async (message) => {
