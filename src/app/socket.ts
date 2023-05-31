@@ -1,3 +1,4 @@
+import { ReactionType } from './schemas/reaction/reaction.type';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Server } from 'socket.io';
 import logger from './util/logger';
@@ -17,6 +18,7 @@ export function startServer(io: Server) {
 
         const channels = user.participatingChannels;
         channels.forEach((channel) => {
+          logger.debug(`${socket.id} joined ${channel}`);
           if (channel) {
             socket.join(channel.toString());
           }
@@ -33,6 +35,7 @@ export function startServer(io: Server) {
 
     socket.on('postMessage', async (message) => {
       try {
+        logger.debug(`${socket.id} sent message: ${message}`);
         const sender = await User.findById(message.sender);
         if (!sender) {
           new Error(`${message.sender} not found`);
@@ -54,6 +57,7 @@ export function startServer(io: Server) {
 
     socket.on('editMessage', async (message) => {
       try {
+        //TODO: sender validation
         await Chat.findByIdAndUpdate(message.id, {
           content: message.content,
         });

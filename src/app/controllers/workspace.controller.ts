@@ -155,6 +155,8 @@ export async function checkInvitationCode(
         participatingWorkspaces: workspace._id,
       },
     });
+
+    //TODO: default channel에 업데이트
     res.json(newWorkspace);
   } catch (error) {
     next(error);
