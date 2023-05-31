@@ -57,6 +57,7 @@ export function startServer(io: Server) {
 
     socket.on('editMessage', async (message) => {
       try {
+        logger.debug(`${message.sender} edit ${message.chatId}`);
         //TODO: sender validation
         await Chat.findByIdAndUpdate(message.id, {
           content: message.content,
@@ -72,6 +73,9 @@ export function startServer(io: Server) {
 
     socket.on('deleteMessage', async (message) => {
       try {
+        logger.debug(`${message.sender} delete ${message.chatId}`);
+
+        //TODO: 작성자 validation
         await Chat.findByIdAndUpdate(message.id, {
           content: 'This message is removed from the channel',
         });
