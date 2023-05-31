@@ -9,7 +9,29 @@ export async function listMessages(
   next: NextFunction,
 ) {
   try {
-    const chats = await Chat.find();
+    const chats = await Chat.find({
+      $or: [
+        {
+          channel: req.params.id,
+        },
+        {
+          directmessage: req.params.id,
+        },
+      ],
+    })
+      .populate('sender')
+      .populate({
+        path: 'responses',
+        populate: {
+          path: 'sender',
+        },
+      })
+      .populate({
+        path: 'reactions',
+        populate: {
+          path: 'reactor',
+        },
+      });
     res.json(chats);
   } catch (error: any) {
     logger.error(error.message);

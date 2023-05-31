@@ -3,6 +3,6 @@ import * as ChatController from '../controllers/chat.controller';
 
 const router: Router = Router();
 
-router.get('/', ChatController.listMessages);
+router.get('/:id', ChatController.listMessages);
 
 export const chatRouter = router;

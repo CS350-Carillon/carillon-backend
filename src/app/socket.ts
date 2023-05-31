@@ -86,6 +86,7 @@ export function startServer(io: Server) {
 
     socket.on('addResponse', async (response) => {
       try {
+        logger.debug(`${response.sender} respond to ${response.chatId}`);
         const sender = await User.findById(response.sender);
         if (!sender) {
           new Error(`${response.sender} not found`);
@@ -116,6 +117,7 @@ export function startServer(io: Server) {
 
     socket.on('addReaction', async (reaction) => {
       try {
+        logger.debug(`${reaction.reactor} reaction to ${reaction.chatId}`);
         const reactor = await User.findById(reaction.reactor);
         if (!reactor) {
           new Error(`${reaction.reactor} not found`);

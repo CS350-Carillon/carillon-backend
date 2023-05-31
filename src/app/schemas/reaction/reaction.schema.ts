@@ -4,7 +4,7 @@ import { ReactionType } from './reaction.type';
 
 const ReactionSchema = new Schema<IReaction>({
   reactionType: {
-    type: Number,
+    type: String,
     enum: Object.values(ReactionType),
     required: true,
   },
