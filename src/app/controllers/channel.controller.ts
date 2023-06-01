@@ -33,6 +33,7 @@ export async function createChannel(
 
     const channel = await Channel.create({
       name: req.body.name,
+      workspace: req.body.workspace,
       description: req.body.description,
       owner: members,
       members: members,

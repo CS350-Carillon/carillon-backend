@@ -1,4 +1,3 @@
-import { ReactionType } from './schemas/reaction/reaction.type';
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Server } from 'socket.io';
 import logger from './util/logger';
