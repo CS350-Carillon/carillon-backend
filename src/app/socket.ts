@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Server } from 'socket.io';
 import logger from './util/logger';
@@ -43,15 +44,14 @@ export function startServer(io: Server) {
           new Error(`${message.sender} not found`);
         }
 
-        await Chat.create({
+        const chat = new Chat({
           content: message.content,
           channel: message.channel,
           sender: message.sender,
-        });
-        io.to(message.channel).emit('postMessage', {
-          sender: sender?.userName,
-          content: message.content,
-        });
+        })
+        await chat.save();
+
+        io.to(message.channel).emit('postMessage', await chat.populate('sender'));
       } catch (error: any) {
         logger.error(error.message);
       }
@@ -61,13 +61,13 @@ export function startServer(io: Server) {
       try {
         logger.debug(`${message.sender} edit ${message.chatId}`);
         //TODO: sender validation
-        await Chat.findByIdAndUpdate(message.id, {
+        const chat = await Chat.findByIdAndUpdate(message.chatId, {
           content: message.content,
-        });
-        io.to(message.channel).emit('editMessage', {
-          messageId: message.id,
-          content: message.content,
-        });
+        }, {
+          new: true,
+        }).populate('sender');
+        
+        io.to(chat!.channel!.toString()).emit('editMessage', chat);
       } catch (error: any) {
         logger.error(error.message);
       }
@@ -78,13 +78,12 @@ export function startServer(io: Server) {
         logger.debug(`${message.sender} delete ${message.chatId}`);
 
         //TODO: 작성자 validation
-        await Chat.findByIdAndUpdate(message.id, {
+        const chat = await Chat.findByIdAndUpdate(message.chatId, {
           content: 'This message is removed from the channel',
-        });
-        io.to(message.channel).emit('deleteMessage', {
-          messageId: message.id,
-          content: 'This message is removed from the channel',
-        });
+        }, {
+          new: true,
+        }).populate('sender');
+        io.to(chat!.channel!.toString()).emit('deleteMessage', chat);
       } catch (error: any) {
         logger.error(error.message);
       }
@@ -98,11 +97,12 @@ export function startServer(io: Server) {
           new Error(`${response.sender} not found`);
         }
 
-        const chat = await Chat.create({
+        const chat = new Chat({
           content: response.content,
           channel: response.channel,
           sender: response.sender,
-        });
+        })
+        await chat.save();
 
         //TODO: Validation
         await Chat.findByIdAndUpdate(response.chatId, {
@@ -112,9 +112,8 @@ export function startServer(io: Server) {
         });
 
         io.to(response.channel).emit('addResponse', {
-          chatId: response.chatId, // This is the id of the chat that the response is for.
-          sender: sender?.userName,
-          content: response.content,
+          response: (await chat.populate('sender')),
+          respondedChatId: response.chatId
         });
       } catch (error: any) {
         logger.error(error.message);
@@ -129,15 +128,16 @@ export function startServer(io: Server) {
           new Error(`${reaction.reactor} not found`);
         }
 
-        const createdReaction = await Reaction.create({
+        const createdReaction = new Reaction({
           reactionType: reaction.reactionType,
           reactor: reaction.reactor,
         });
+        await createdReaction.save();
 
         //TODO: Validation
         const chat = await Chat.findById(reaction.chatId);
         if (!chat || !chat.channel) {
-          return new Error(`Channel not found`);
+          throw new Error(`Channel not found`);
         }
 
         await Chat.findByIdAndUpdate(reaction.chatId, {
@@ -147,9 +147,8 @@ export function startServer(io: Server) {
         });
 
         io.to(chat.channel.toString()).emit('addReaction', {
-          chatId: reaction.chatId, // This is the id of the chat that the response is for.
-          sender: reactor?.userName,
-          reactionType: reaction.reactionType,
+          reaction: await createdReaction.populate('reactor'),
+          chatId: chat._id,
         });
       } catch (error: any) {
         logger.error(error.message);
