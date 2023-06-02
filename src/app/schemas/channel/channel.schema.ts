@@ -28,8 +28,9 @@ const ChannelSchema = new Schema<IChannel>({
 ChannelSchema.pre('save', async function (next) {
   const channel = await Channel.findOne({
     name: this.name,
+    workspace: this.workspace,
   });
-  if (!channel) {
+  if (channel) {
     return next(new Error('Channel already exists'));
   }
 
