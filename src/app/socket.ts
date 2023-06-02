@@ -48,7 +48,7 @@ export function startServer(io: Server) {
           channel: message.channel,
           sender: message.sender,
         });
-        socket.to(message.channel.toString()).emit('postMessage', {
+        io.to(message.channel).emit('postMessage', {
           sender: sender?.userName,
           content: message.content,
         });
@@ -64,7 +64,7 @@ export function startServer(io: Server) {
         await Chat.findByIdAndUpdate(message.id, {
           content: message.content,
         });
-        socket.to(message.channel.toString()).emit('editMessage', {
+        io.to(message.channel).emit('editMessage', {
           messageId: message.id,
           content: message.content,
         });
@@ -81,7 +81,7 @@ export function startServer(io: Server) {
         await Chat.findByIdAndUpdate(message.id, {
           content: 'This message is removed from the channel',
         });
-        socket.to(message.channel.toString()).emit('deleteMessage', {
+        io.to(message.channel).emit('deleteMessage', {
           messageId: message.id,
           content: 'This message is removed from the channel',
         });
@@ -111,7 +111,7 @@ export function startServer(io: Server) {
           },
         });
 
-        socket.to(response.channel.toString()).emit('addResponse', {
+        io.to(response.channel).emit('addResponse', {
           chatId: response.chatId, // This is the id of the chat that the response is for.
           sender: sender?.userName,
           content: response.content,
@@ -146,7 +146,7 @@ export function startServer(io: Server) {
           },
         });
 
-        socket.to(chat.channel.toString()).emit('addReaction', {
+        io.to(chat.channel.toString()).emit('addReaction', {
           chatId: reaction.chatId, // This is the id of the chat that the response is for.
           sender: reactor?.userName,
           reactionType: reaction.reactionType,
