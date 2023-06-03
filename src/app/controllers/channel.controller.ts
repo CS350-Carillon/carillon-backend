@@ -80,7 +80,6 @@ export async function deleteChannel(
   }
 }
 
-//TODO: add member & kick member 소켓과 연결
 export async function addMembers(
   req: Request,
   res: Response,
@@ -98,6 +97,7 @@ export async function addMembers(
         members: req.body.members,
       },
     });
+    invite(req.body.members, channel!._id);
     res.json(newChannel);
   } catch (error: any) {
     logger.error(error.message);
