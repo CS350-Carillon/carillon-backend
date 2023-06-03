@@ -13,4 +13,5 @@ export interface IChat {
   sender: PopulatedDoc<IUser>;
   isDeleted: boolean;
   isResponse: boolean;
+  isFile: boolean;
 }

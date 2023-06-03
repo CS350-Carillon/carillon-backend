@@ -39,6 +39,10 @@ const ChatSchema = new Schema<IChat>({
   isResponse: {
     type: Boolean,
     default: false,
+  },
+  isFile: {
+    type: Boolean,
+    default: false,
   }
 });
 
