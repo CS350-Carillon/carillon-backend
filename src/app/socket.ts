@@ -48,10 +48,14 @@ export function startServer(io: Server) {
           content: message.content,
           channel: message.channel,
           sender: message.sender,
-        })
+          isFile: message.isFile,
+        });
         await chat.save();
 
-        io.to(message.channel).emit('postMessage', await chat.populate('sender'));
+        io.to(message.channel).emit(
+          'postMessage',
+          await chat.populate('sender'),
+        );
       } catch (error: any) {
         logger.error(error.message);
       }
@@ -61,12 +65,16 @@ export function startServer(io: Server) {
       try {
         logger.debug(`${message.sender} edit ${message.chatId}`);
         //TODO: sender validation
-        const chat = await Chat.findByIdAndUpdate(message.chatId, {
-          content: message.content,
-        }, {
-          new: true,
-        }).populate('sender');
-        
+        const chat = await Chat.findByIdAndUpdate(
+          message.chatId,
+          {
+            content: message.content,
+          },
+          {
+            new: true,
+          },
+        ).populate('sender');
+
         io.to(chat!.channel!.toString()).emit('editMessage', chat);
       } catch (error: any) {
         logger.error(error.message);
@@ -78,12 +86,16 @@ export function startServer(io: Server) {
         logger.debug(`${message.sender} delete ${message.chatId}`);
 
         //TODO: 작성자 validation
-        const chat = await Chat.findByIdAndUpdate(message.chatId, {
-          content: 'This message is removed from the channel',
-          isDeleted: true,
-        }, {
-          new: true,
-        }).populate('sender');
+        const chat = await Chat.findByIdAndUpdate(
+          message.chatId,
+          {
+            content: 'This message is removed from the channel',
+            isDeleted: true,
+          },
+          {
+            new: true,
+          },
+        ).populate('sender');
         io.to(chat!.channel!.toString()).emit('deleteMessage', chat);
       } catch (error: any) {
         logger.error(error.message);
@@ -103,7 +115,7 @@ export function startServer(io: Server) {
           channel: response.channel,
           sender: response.sender,
           isResponse: true,
-        })
+        });
         await chat.save();
 
         //TODO: Validation
@@ -114,8 +126,8 @@ export function startServer(io: Server) {
         });
 
         io.to(response.channel).emit('addResponse', {
-          response: (await chat.populate('sender')),
-          respondedChatId: response.chatId
+          response: await chat.populate('sender'),
+          respondedChatId: response.chatId,
         });
       } catch (error: any) {
         logger.error(error.message);
@@ -159,7 +171,9 @@ export function startServer(io: Server) {
 
     socket.on('deleteReaction', async (reaction) => {
       try {
-        logger.debug(`${reaction.reactor} delete reaction: ${reaction.reactionId}`);
+        logger.debug(
+          `${reaction.reactor} delete reaction: ${reaction.reactionId}`,
+        );
         const reactor = await User.findById(reaction.reactor);
         if (!reactor) {
           new Error(`${reaction.reactor} not found`);
@@ -168,8 +182,7 @@ export function startServer(io: Server) {
         const deletedReaction = await Reaction.findOneAndDelete({
           _id: reaction.reactionId,
           reactor: reaction.reactor,
-        })
-
+        });
 
         //TODO: Validation
         const chat = await Chat.findById(reaction.chatId);
