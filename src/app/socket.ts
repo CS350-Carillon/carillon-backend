@@ -80,6 +80,7 @@ export function startServer(io: Server) {
         //TODO: 작성자 validation
         const chat = await Chat.findByIdAndUpdate(message.chatId, {
           content: 'This message is removed from the channel',
+          isDeleted: true,
         }, {
           new: true,
         }).populate('sender');

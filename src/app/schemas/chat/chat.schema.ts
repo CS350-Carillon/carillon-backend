@@ -32,6 +32,10 @@ const ChatSchema = new Schema<IChat>({
     ref: 'User',
     required: true,
   },
+  isDeleted: {
+    type: Boolean,
+    default: false,
+  }
 });
 
 ChatSchema.pre('save', async function (next) {

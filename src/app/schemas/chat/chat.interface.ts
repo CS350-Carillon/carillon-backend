@@ -11,4 +11,5 @@ export interface IChat {
   responses: PopulatedDoc<IChat>;
   reactions: PopulatedDoc<IReaction>[];
   sender: PopulatedDoc<IUser>;
+  isDeleted: boolean;
 }
