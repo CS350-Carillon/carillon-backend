@@ -3,6 +3,7 @@ import { NextFunction, Request, Response } from 'express';
 import { Channel, User, Workspace } from '../schemas';
 import logger from '../util/logger';
 import { Types } from 'mongoose';
+import { invite } from '../socket';
 
 export async function listChannel(
   req: Request,
@@ -45,6 +46,8 @@ export async function createChannel(
         participatingChannels: channel._id,
       },
     });
+
+    invite(members, channel._id);
     res.json(channel);
   } catch (error: any) {
     logger.error(error.message);
