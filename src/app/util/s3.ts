@@ -1,8 +1,9 @@
-import { PutObjectCommand, S3Client } from "@aws-sdk/client-s3";
-import logger from "./logger";
-import { config } from "dotenv";
+import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import { config } from 'dotenv';
 
-config()
+config();
+
+const BUCKET_ADDR = 'https://carillon-bucket.s3.ap-northeast-2.amazonaws.com/';
 
 const client = new S3Client({
   credentials: {
@@ -17,8 +18,10 @@ export async function uploadImageToS3(filename: string, buffer: Buffer) {
     Bucket: 'carillon-bucket',
     Key: filename,
     Body: buffer,
-    ACL: 'public-read',
   });
-  const result = await client.send(command);
-  logger.debug(result);
+  await client.send(command);
+}
+
+export function getFileAddress(filename: string) {
+  return BUCKET_ADDR + filename;
 }

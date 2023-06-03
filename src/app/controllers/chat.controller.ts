@@ -3,6 +3,7 @@ import { NextFunction, Request, Response } from 'express';
 import logger from '../util/logger';
 import { Chat, Reaction, User } from '../schemas';
 import { Types } from 'mongoose';
+import { getFileAddress, uploadImageToS3 } from '../util/s3';
 
 export async function listMessages(
   req: Request,
@@ -26,7 +27,7 @@ export async function listMessages(
       {
         $match: {
           isResponse: false,
-        }
+        },
       },
       {
         $lookup: {
@@ -109,14 +110,28 @@ export async function listMessages(
           from: User.collection.name,
           localField: 'sender',
           foreignField: '_id',
-          as: "sender_info"
-        }
-      }
+          as: 'sender_info',
+        },
+      },
     ]);
 
     res.json(chats);
   } catch (error: any) {
     logger.error(error.message);
+    next(error);
+  }
+}
+
+export async function uploadImage(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    logger.debug(`Uploading file ${req.file?.originalname}`);
+    uploadImageToS3(req.file!.originalname, req.file!.buffer);
+    res.json(getFileAddress(req.file!.originalname));
+  } catch (error) {
     next(error);
   }
 }
