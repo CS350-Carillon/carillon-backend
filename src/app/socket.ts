@@ -154,5 +154,40 @@ export function startServer(io: Server) {
         logger.error(error.message);
       }
     });
+
+    socket.on('deleteReaction', async (reaction) => {
+      try {
+        logger.debug(`${reaction.reactor} delete reaction: ${reaction.reactionId}`);
+        const reactor = await User.findById(reaction.reactor);
+        if (!reactor) {
+          new Error(`${reaction.reactor} not found`);
+        }
+
+        const deletedReaction = await Reaction.findOneAndDelete({
+          _id: reaction.reactionId,
+          reactor: reaction.reactor,
+        })
+
+
+        //TODO: Validation
+        const chat = await Chat.findById(reaction.chatId);
+        if (!chat || !chat.channel) {
+          throw new Error(`Channel not found`);
+        }
+
+        await Chat.findByIdAndUpdate(reaction.chatId, {
+          $pull: {
+            reactions: reaction.reactionId,
+          },
+        });
+
+        io.to(chat.channel.toString()).emit('deleteReaction', {
+          reaction: await deletedReaction!.populate('reactor'),
+          chatId: chat._id,
+        });
+      } catch (error: any) {
+        logger.error(error.message);
+      }
+    });
   });
 }
