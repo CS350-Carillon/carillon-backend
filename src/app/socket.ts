@@ -3,8 +3,12 @@
 import { Server } from 'socket.io';
 import logger from './util/logger';
 import { Chat, Reaction, User } from './schemas';
+import { Types } from 'mongoose';
+
+let _io: Server;
 
 export function startServer(io: Server) {
+  _io = io;
   io.on('connection', (socket) => {
     logger.info(`Connected to websocket ${socket.id}`);
 
@@ -204,5 +208,12 @@ export function startServer(io: Server) {
         logger.error(error.message);
       }
     });
+  });
+}
+
+export function invite(users: Types.ObjectId[], channel: Types.ObjectId) {
+  _io.emit('invite', {
+    users: users,
+    channel: channel,
   });
 }
