@@ -33,6 +33,7 @@ export async function createWorkspace(
       },
       {
         name: req.body.name,
+        description: req.body.description,
         owner: res.locals.user.id,
         members: members,
         invitationCode: generateAuthCode(),

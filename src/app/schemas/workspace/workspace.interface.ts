@@ -4,6 +4,7 @@ import { IChannel } from '../channel';
 
 export interface IWorkspace {
   name: string;
+  description: string;
   owner: PopulatedDoc<IUser>;
   invitationCode: string;
   members: PopulatedDoc<IUser>[];
