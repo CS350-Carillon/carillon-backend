@@ -99,6 +99,14 @@ export async function listMessages(
           as: 'responses_info',
         },
       },
+      {
+        $lookup: {
+          from: User.collection.name,
+          localField: 'sender',
+          foreignField: '_id',
+          as: "sender_info"
+        }
+      }
     ]);
 
     // const chats = await Chat.find({
