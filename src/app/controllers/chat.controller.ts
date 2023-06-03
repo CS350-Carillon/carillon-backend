@@ -24,6 +24,11 @@ export async function listMessages(
         },
       },
       {
+        $match: {
+          isResponse: false,
+        }
+      },
+      {
         $lookup: {
           from: Reaction.collection.name,
           localField: 'reactions',

@@ -35,6 +35,10 @@ const ChatSchema = new Schema<IChat>({
   isDeleted: {
     type: Boolean,
     default: false,
+  },
+  isResponse: {
+    type: Boolean,
+    default: false,
   }
 });
 

@@ -102,6 +102,7 @@ export function startServer(io: Server) {
           content: response.content,
           channel: response.channel,
           sender: response.sender,
+          isResponse: true,
         })
         await chat.save();
 
