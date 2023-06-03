@@ -13,6 +13,11 @@ const DirectmessageSchema = new Schema<IDirectmessage>({
   },
   members: [{ type: Types.ObjectId, ref: 'User' }],
   muteMembers: [{ type: Types.ObjectId, ref: 'User' }],
+  workspace: {
+    type: Types.ObjectId,
+    ref: 'Workspace',
+    required: true,
+  },
 });
 
 export const Directmessage = model<IDirectmessage>(
