@@ -7,11 +7,14 @@ import { Types } from 'mongoose';
 
 let _io: Server;
 
+//TODO: refactor to follow DRY
+
 export function startServer(io: Server) {
   _io = io;
   io.on('connection', (socket) => {
     logger.info(`Connected to websocket ${socket.id}`);
 
+    /* Join all participating rooms */
     socket.on('init', async (data) => {
       try {
         logger.debug(`${data.userId} initially join all rooms`);
@@ -25,6 +28,14 @@ export function startServer(io: Server) {
           logger.debug(`${socket.id} joined ${channel}`);
           if (channel) {
             socket.join(channel.toString());
+          }
+        });
+
+        const directmessages = user.participatingDMs;
+        directmessages.forEach((directmessage) => {
+          logger.debug(`${socket.id} joined ${directmessage}`);
+          if (directmessage) {
+            socket.join(directmessage.toString());
           }
         });
       } catch (error: any) {
@@ -43,23 +54,32 @@ export function startServer(io: Server) {
     socket.on('postMessage', async (message) => {
       try {
         logger.debug(`${socket.id} sent message: ${message}`);
-        const sender = await User.findById(message.sender);
-        if (!sender) {
-          new Error(`${message.sender} not found`);
-        }
 
-        const chat = new Chat({
-          content: message.content,
-          channel: message.channel,
-          sender: message.sender,
-          isFile: message.isFile,
-        });
+        //If message.isFile == true, message.content should be url
+        //TODO: automatically validate above
+        let chat, room;
+        if (message.channel) {
+          chat = new Chat({
+            content: message.content,
+            channel: message.channel,
+            sender: message.sender,
+            isFile: message.isFile,
+          });
+          room = message.channel;
+        } else if (message.directmessage) {
+          chat = new Chat({
+            content: message.content,
+            directmessage: message.directmessage,
+            sender: message.sender,
+            isFile: message.isFile,
+          });
+          room = message.directmessage;
+        } else {
+          throw new Error('Either channel or directmessage should be given');
+        }
         await chat.save();
 
-        io.to(message.channel).emit(
-          'postMessage',
-          await chat.populate('sender'),
-        );
+        io.to(room).emit('postMessage', await chat.populate('sender'));
       } catch (error: any) {
         logger.error(error.message);
       }
@@ -68,18 +88,32 @@ export function startServer(io: Server) {
     socket.on('editMessage', async (message) => {
       try {
         logger.debug(`${message.sender} edit ${message.chatId}`);
-        //TODO: sender validation
-        const chat = await Chat.findByIdAndUpdate(
-          message.chatId,
-          {
-            content: message.content,
-          },
-          {
-            new: true,
-          },
-        ).populate('sender');
 
-        io.to(chat!.channel!.toString()).emit('editMessage', chat);
+        const chat = await Chat.findById(message.chatId);
+        if (!chat) {
+          throw new Error('Chat not found');
+        } else if (chat.isFile) {
+          throw new Error('File type message cannot be edited');
+        } else if (chat.isDeleted) {
+          throw new Error('Deleted message cannot be edited');
+        }
+
+        chat.content = message.content;
+        await chat.save();
+
+        let room;
+        if (chat.channel) {
+          room = chat.channel;
+        } else if (chat.directmessage) {
+          room = chat.directmessage;
+        } else {
+          throw new Error('Either directmessage or channel should be existed');
+        }
+
+        io.to(room.toString()).emit(
+          'editMessage',
+          await chat.populate('sender'),
+        );
       } catch (error: any) {
         logger.error(error.message);
       }
@@ -89,18 +123,32 @@ export function startServer(io: Server) {
       try {
         logger.debug(`${message.sender} delete ${message.chatId}`);
 
-        //TODO: 작성자 validation
-        const chat = await Chat.findByIdAndUpdate(
-          message.chatId,
-          {
-            content: 'This message is removed from the channel',
-            isDeleted: true,
-          },
-          {
-            new: true,
-          },
-        ).populate('sender');
-        io.to(chat!.channel!.toString()).emit('deleteMessage', chat);
+        const chat = await Chat.findById(message.chatId);
+        if (!chat) {
+          throw new Error('Chat not found');
+        } else if (chat.isDeleted) {
+          throw new Error('Message already deleted');
+        } else if (message.sender != chat.sender) {
+          throw new Error('Sender does not have the authority');
+        }
+
+        chat.content = 'This message is removed from the channel';
+        chat.isDeleted = true;
+        await chat.save();
+
+        let room;
+        if (chat.channel) {
+          room = chat.channel;
+        } else if (chat.directmessage) {
+          room = chat.directmessage;
+        } else {
+          throw new Error('Either directmessage or channel should be existed');
+        }
+
+        io.to(room.toString()).emit(
+          'deleteMessage',
+          await chat.populate('sender'),
+        );
       } catch (error: any) {
         logger.error(error.message);
       }
@@ -108,28 +156,47 @@ export function startServer(io: Server) {
 
     socket.on('addResponse', async (response) => {
       try {
+        // response.chatId is the chat which is responded
         logger.debug(`${response.sender} respond to ${response.chatId}`);
-        const sender = await User.findById(response.sender);
-        if (!sender) {
-          new Error(`${response.sender} not found`);
+
+        const respondedChat = await Chat.findById(response.chatId);
+        if (!respondedChat) {
+          throw new Error('Chat not found');
+        } else if (respondedChat.isDeleted) {
+          throw new Error('Deleted message cannot be responded');
+        } else if (respondedChat.isResponse) {
+          throw new Error('Response message cannot be responded');
         }
 
-        const chat = new Chat({
-          content: response.content,
-          channel: response.channel,
-          sender: response.sender,
-          isResponse: true,
-        });
+        let chat, room;
+        if (response.channel) {
+          chat = new Chat({
+            content: response.content,
+            channel: response.channel,
+            sender: response.sender,
+            isFile: response.isFile,
+          });
+          room = response.channel;
+        } else if (response.directmessage) {
+          chat = new Chat({
+            content: response.content,
+            directmessage: response.directmessage,
+            sender: response.sender,
+            isFile: response.isFile,
+          });
+          room = response.directmessage;
+        } else {
+          throw new Error('Either channel or directmessage should be given');
+        }
         await chat.save();
 
-        //TODO: Validation
         await Chat.findByIdAndUpdate(response.chatId, {
           $push: {
             responses: chat,
           },
         });
 
-        io.to(response.channel).emit('addResponse', {
+        io.to(room).emit('addResponse', {
           response: await chat.populate('sender'),
           respondedChatId: response.chatId,
         });
@@ -140,10 +207,12 @@ export function startServer(io: Server) {
 
     socket.on('addReaction', async (reaction) => {
       try {
+        // reaction.chatId is the chat which is responded
         logger.debug(`${reaction.reactor} reaction to ${reaction.chatId}`);
-        const reactor = await User.findById(reaction.reactor);
-        if (!reactor) {
-          new Error(`${reaction.reactor} not found`);
+
+        const chat = await Chat.findById(reaction.chatId);
+        if (!chat) {
+          throw new Error('Channel not found');
         }
 
         const createdReaction = new Reaction({
@@ -152,19 +221,22 @@ export function startServer(io: Server) {
         });
         await createdReaction.save();
 
-        //TODO: Validation
-        const chat = await Chat.findById(reaction.chatId);
-        if (!chat || !chat.channel) {
-          throw new Error(`Channel not found`);
-        }
-
         await Chat.findByIdAndUpdate(reaction.chatId, {
           $push: {
             reactions: createdReaction,
           },
         });
 
-        io.to(chat.channel.toString()).emit('addReaction', {
+        let room;
+        if (chat.channel) {
+          room = chat.channel;
+        } else if (chat.directmessage) {
+          room = chat.directmessage;
+        } else {
+          throw new Error('Either directmessage or channel should be existed');
+        }
+
+        io.to(room.toString()).emit('addReaction', {
           reaction: await createdReaction.populate('reactor'),
           chatId: chat._id,
         });
@@ -178,21 +250,23 @@ export function startServer(io: Server) {
         logger.debug(
           `${reaction.reactor} delete reaction: ${reaction.reactionId}`,
         );
+
+        // Reaction should contain chatId because the server should broadcast deletion of reaction
+        const chat = await Chat.findById(reaction.chatId);
+        if (!chat) {
+          throw new Error(`Channel not found`);
+        }
+
         const reactor = await User.findById(reaction.reactor);
         if (!reactor) {
           new Error(`${reaction.reactor} not found`);
         }
 
+        // Validate the reactor has authroity which enables reactor delete the reaction
         const deletedReaction = await Reaction.findOneAndDelete({
           _id: reaction.reactionId,
           reactor: reaction.reactor,
         });
-
-        //TODO: Validation
-        const chat = await Chat.findById(reaction.chatId);
-        if (!chat || !chat.channel) {
-          throw new Error(`Channel not found`);
-        }
 
         await Chat.findByIdAndUpdate(reaction.chatId, {
           $pull: {
@@ -200,7 +274,16 @@ export function startServer(io: Server) {
           },
         });
 
-        io.to(chat.channel.toString()).emit('deleteReaction', {
+        let room;
+        if (chat.channel) {
+          room = chat.channel;
+        } else if (chat.directmessage) {
+          room = chat.directmessage;
+        } else {
+          throw new Error('Either directmessage or channel should be existed');
+        }
+
+        io.to(room.toString()).emit('deleteReaction', {
           reaction: await deletedReaction!.populate('reactor'),
           chatId: chat._id,
         });
@@ -211,9 +294,10 @@ export function startServer(io: Server) {
   });
 }
 
-export function invite(users: Types.ObjectId[], channel: Types.ObjectId) {
+// Broadcast initial members of room
+export function invite(users: Types.ObjectId[], room: Types.ObjectId) {
   _io.emit('invite', {
     users: users,
-    channel: channel,
+    room: room,
   });
 }
