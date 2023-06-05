@@ -40,30 +40,46 @@ export async function listMessages(
                 _id: {
                   reactionType: '$reactionType',
                 },
-                userId: { $push: '$reactor' },
+                reaction: { $push: '$_id' },
               },
             },
             {
               $lookup: {
-                from: User.collection.name,
-                localField: 'userId',
+                from: Reaction.collection.name,
+                localField: 'reaction',
                 foreignField: '_id',
                 pipeline: [
                   {
+                    $lookup: {
+                      from: User.collection.name,
+                      localField: 'reactor',
+                      foreignField: '_id',
+                      pipeline: [
+                        {
+                          $project: {
+                            _id: 1,
+                            userName: 1,
+                          },
+                        },
+                      ],
+                      as: 'reactor_info',
+                    },
+                  },
+                  {
                     $project: {
                       _id: 1,
-                      userName: 1,
+                      reactor: 'reactor_info',
                     },
                   },
                 ],
-                as: 'user_info',
+                as: 'reaction_info',
               },
             },
             {
               $project: {
                 _id: 0,
                 reactionType: '$_id.reactionType',
-                user_info: '$user_info',
+                reaction: '$reaction_info',
               },
             },
           ],
