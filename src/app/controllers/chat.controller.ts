@@ -48,6 +48,14 @@ export async function listMessages(
                 from: User.collection.name,
                 localField: 'userId',
                 foreignField: '_id',
+                pipeline: [
+                  {
+                    $project: {
+                      _id: 1,
+                      userName: 1,
+                    },
+                  },
+                ],
                 as: 'user_info',
               },
             },
@@ -87,7 +95,15 @@ export async function listMessages(
                       from: User.collection.name,
                       localField: 'userId',
                       foreignField: '_id',
-                      as: 'user_info',
+                      pipeline: [
+                        {
+                          $project: {
+                            _id: 1,
+                            userName: 1,
+                          },
+                        },
+                      ],
+                      as: 'reactor_info',
                     },
                   },
                   {
@@ -101,6 +117,29 @@ export async function listMessages(
                 as: 'reactions_info',
               },
             },
+            {
+              $lookup: {
+                from: User.collection.name,
+                localField: 'sender',
+                foreignField: '_id',
+                pipeline: [
+                  {
+                    $project: {
+                      _id: 1,
+                      userName: 1,
+                    },
+                  },
+                ],
+                as: 'sender_info',
+              },
+            },
+            {
+              $project: {
+                responses: 0,
+                reactions: 0,
+                sender: 0,
+              },
+            },
           ],
           as: 'responses_info',
         },
@@ -110,7 +149,22 @@ export async function listMessages(
           from: User.collection.name,
           localField: 'sender',
           foreignField: '_id',
+          pipeline: [
+            {
+              $project: {
+                _id: 1,
+                userName: 1,
+              },
+            },
+          ],
           as: 'sender_info',
+        },
+      },
+      {
+        $project: {
+          responses: 0,
+          reactions: 0,
+          sender: 0,
         },
       },
     ]);
