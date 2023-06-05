@@ -68,8 +68,15 @@ export async function listMessages(
                   {
                     $project: {
                       _id: 1,
-                      reactor: 'reactor_info',
+                      reactorId: '$reactor_info._id',
+                      reactorName: '$reactor_info.userName',
                     },
+                  },
+                  {
+                    $unwind: '$reactorId',
+                  },
+                  {
+                    $unwind: '$reactorName',
                   },
                 ],
                 as: 'reaction_info',
@@ -103,30 +110,53 @@ export async function listMessages(
                       _id: {
                         reactionType: '$reactionType',
                       },
-                      userId: { $push: '$reactor' },
+                      reaction: { $push: '$_id' },
                     },
                   },
                   {
                     $lookup: {
-                      from: User.collection.name,
-                      localField: 'userId',
+                      from: Reaction.collection.name,
+                      localField: 'reaction',
                       foreignField: '_id',
                       pipeline: [
                         {
-                          $project: {
-                            _id: 1,
-                            userName: 1,
+                          $lookup: {
+                            from: User.collection.name,
+                            localField: 'reactor',
+                            foreignField: '_id',
+                            pipeline: [
+                              {
+                                $project: {
+                                  _id: 1,
+                                  userName: 1,
+                                },
+                              },
+                            ],
+                            as: 'reactor_info',
                           },
                         },
+                        {
+                          $project: {
+                            _id: 1,
+                            reactorId: '$reactor_info._id',
+                            reactorName: '$reactor_info.userName',
+                          },
+                        },
+                        {
+                          $unwind: '$reactorId',
+                        },
+                        {
+                          $unwind: '$reactorName',
+                        },
                       ],
-                      as: 'reactor_info',
+                      as: 'reaction_info',
                     },
                   },
                   {
                     $project: {
                       _id: 0,
                       reactionType: '$_id.reactionType',
-                      user_info: '$user_info',
+                      reaction: '$reaction_info',
                     },
                   },
                 ],
@@ -148,6 +178,9 @@ export async function listMessages(
                 ],
                 as: 'sender_info',
               },
+            },
+            {
+              $unwind: '$sender_info',
             },
             {
               $project: {
@@ -175,6 +208,9 @@ export async function listMessages(
           ],
           as: 'sender_info',
         },
+      },
+      {
+        $unwind: '$sender_info',
       },
       {
         $project: {
