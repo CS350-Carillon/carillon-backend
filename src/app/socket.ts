@@ -175,6 +175,7 @@ export function startServer(io: Server) {
             channel: response.channel,
             sender: response.sender,
             isFile: response.isFile,
+            isResponse: true,
           });
           room = response.channel;
         } else if (response.directmessage) {
@@ -183,6 +184,7 @@ export function startServer(io: Server) {
             directmessage: response.directmessage,
             sender: response.sender,
             isFile: response.isFile,
+            isResponse: true,
           });
           room = response.directmessage;
         } else {
