@@ -33,6 +33,7 @@ export async function createWorkspace(
       },
       {
         name: req.body.name,
+        description: req.body.description,
         owner: res.locals.user.id,
         members: members,
         invitationCode: generateAuthCode(),
@@ -155,6 +156,8 @@ export async function checkInvitationCode(
         participatingWorkspaces: workspace._id,
       },
     });
+
+    //TODO: default channel에 업데이트
     res.json(newWorkspace);
   } catch (error) {
     next(error);

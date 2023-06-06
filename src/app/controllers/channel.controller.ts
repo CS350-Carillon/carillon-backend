@@ -3,6 +3,7 @@ import { NextFunction, Request, Response } from 'express';
 import { Channel, User, Workspace } from '../schemas';
 import logger from '../util/logger';
 import { Types } from 'mongoose';
+import { invite } from '../socket';
 
 export async function listChannel(
   req: Request,
@@ -33,6 +34,7 @@ export async function createChannel(
 
     const channel = await Channel.create({
       name: req.body.name,
+      workspace: req.body.workspace,
       description: req.body.description,
       owner: members,
       members: members,
@@ -44,6 +46,8 @@ export async function createChannel(
         participatingChannels: channel._id,
       },
     });
+
+    invite(members, channel._id);
     res.json(channel);
   } catch (error: any) {
     logger.error(error.message);
@@ -76,7 +80,6 @@ export async function deleteChannel(
   }
 }
 
-//TODO: add member & kick member 소켓과 연결
 export async function addMembers(
   req: Request,
   res: Response,
@@ -94,6 +97,7 @@ export async function addMembers(
         members: req.body.members,
       },
     });
+    invite(req.body.members, channel!._id);
     res.json(newChannel);
   } catch (error: any) {
     logger.error(error.message);

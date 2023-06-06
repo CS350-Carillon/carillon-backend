@@ -11,6 +11,10 @@ const ChatSchema = new Schema<IChat>({
     type: Types.ObjectId,
     ref: 'Channel',
   },
+  directmessage: {
+    type: Types.ObjectId,
+    ref: 'Directmessage',
+  },
   responses: [
     {
       type: Types.ObjectId,
@@ -28,6 +32,18 @@ const ChatSchema = new Schema<IChat>({
     ref: 'User',
     required: true,
   },
+  isDeleted: {
+    type: Boolean,
+    default: false,
+  },
+  isResponse: {
+    type: Boolean,
+    default: false,
+  },
+  isFile: {
+    type: Boolean,
+    default: false,
+  }
 });
 
 ChatSchema.pre('save', async function (next) {
@@ -40,6 +56,16 @@ ChatSchema.pre('save', async function (next) {
     return next(new Error('User not in channel'));
   }
   next();
-})
+});
+
+ChatSchema.pre('save', function (next) {
+  if (
+    (this.channel && this.directmessage) ||
+    (!this.channel && !this.directmessage)
+  ) {
+    return next(new Error('Invalid channel & directmessage input'));
+  }
+  next();
+});
 
 export const Chat = model<IChat>('Chat', ChatSchema);

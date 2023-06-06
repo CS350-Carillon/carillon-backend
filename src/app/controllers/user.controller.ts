@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextFunction, Request, Response } from 'express';
-import { User } from '../schemas';
+import { Auth, User } from '../schemas';
 import { compareSync, hashSync } from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import logger from '../util/logger';
+import { generateAuthCode, sendEmail } from '../util/email.authentication';
 
 export async function list(req: Request, res: Response, next: NextFunction) {
   try {
@@ -89,6 +90,61 @@ export async function editInformation(
       return res.status(401).send('Invalid user id');
     }
     res.json(user.toJSON());
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function sendEmailVerification(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const authCode = generateAuthCode();
+    await Auth.updateOne(
+      {
+        email: req.body.email,
+      },
+      {
+        authCode: authCode,
+        created_at: new Date(),
+      },
+      {
+        upsert: true,
+        new: true,
+      },
+    );
+
+    setTimeout(async () => {
+      await Auth.deleteOne({
+        email: req.body.email,
+      });
+    }, 30 * 60 * 1000);
+    await sendEmail(req.body.email, authCode);
+    res.sendStatus(200);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function verifyEmail(
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) {
+  try {
+    const auth = await Auth.findOne({
+      email: req.body.email,
+    });
+    if (!auth) {
+      return res.sendStatus(401).send('Invalid email');
+    }
+    if (auth.authCode != req.body.authCode) {
+      return res.sendStatus(401).send('Invalid auth code');
+    }
+    await Auth.deleteOne({ email: req.body.email });
+    res.sendStatus(200);
   } catch (error) {
     next(error);
   }
