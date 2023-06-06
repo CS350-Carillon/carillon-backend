@@ -5,7 +5,7 @@ import express, { Express, NextFunction, Request, Response } from 'express';
 import { applicationRouter } from './routes';
 import logger from './util/logger';
 import mongoose from 'mongoose';
-import { createServer } from "http";
+import { createServer } from 'http';
 import { Server } from 'socket.io';
 import { startServer } from './socket';
 
@@ -25,7 +25,7 @@ export class Application {
     this._server.use(this.errorHandler);
     this.connectDatabase();
 
-    this._httpServer = createServer(this._server)
+    this._httpServer = createServer(this._server);
     this.connectWebSocket();
   }
 
@@ -46,9 +46,13 @@ export class Application {
   }
 
   private connectWebSocket() {
-    const io = new Server(this._httpServer, { /* options */ });
+    const io = new Server(this._httpServer, {
+      cors: {
+        origin: '*',
+      },
+    });
     startServer(io);
-    logger.info('Listening to socket connection')
+    logger.info('Listening to socket connection');
   }
 
   private errorHandler(
