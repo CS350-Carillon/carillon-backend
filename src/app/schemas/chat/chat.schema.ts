@@ -52,9 +52,11 @@ ChatSchema.pre('save', async function (next) {
     return next(new Error('User not found'));
   }
 
-  if (!sender.participatingChannels.includes(this.channel)) {
-    return next(new Error('User not in channel'));
-  }
+  // if ((sender.participatingChannels.includes(this.channel))) {
+  //   return next(new Error('User not in channel'));
+  // }
+
+
   next();
 });
 
